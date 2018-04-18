@@ -49,7 +49,7 @@ class NaiveSender(BaseSender):
     def receive_from_network(self, seg):
         pass    # Nothing to do!
 
-    def on_interrupt():
+    def on_interrupt(self):
         pass    # Nothing to do!
 
 class NaiveReceiver(BaseReceiver):
