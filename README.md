@@ -34,6 +34,6 @@ optional arguments:
 Eli Salm @salmeli
 Jong Hoon Bae @baejongh
 
-
+Python 2.7
 
 * *(List of external resources that you consulted)*
