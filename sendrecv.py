@@ -34,10 +34,10 @@ from sendrecvbase import BaseSender, BaseReceiver
 import Queue
 
 class Segment:
-    def __init__(self, msg, dst, bit):
+    def __init__(self, msg, dst, bit=None):
         self.msg = msg
         self.dst = dst
-        self.bit = None
+        self.bit = bit
 
 class NaiveSender(BaseSender):
     def __init__(self, app_interval):
@@ -125,7 +125,7 @@ class GBNSender(BaseSender):
     else:
       self.base = seg.bit + 1
       if(self.base==self.nextseqnum):
-        self.stop_timer()
+        self.end_timer()
       else:
         self.start_timer(3)
 
