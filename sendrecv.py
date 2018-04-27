@@ -72,7 +72,7 @@ class AltSender(BaseSender):
     old_seg = Segment(msg, 'receiver', self.bit)
     self.send_to_network(seg)
     self.old_seg = old_seg
-    self.start_timer(3)
+    self.start_timer(self.app_interval)
 
   def receive_from_network(self, seg):
     if (seg.bit == self.bit and seg.msg == "ACK"): 
@@ -83,7 +83,7 @@ class AltSender(BaseSender):
   def on_interrupt(self):
     seg = Segment(self.old_seg.msg, 'receiver', self.old_seg.bit)
     self.send_to_network(seg)
-    self.start_timer(3)
+    self.start_timer(self.app_interval)
     pass
 
 class AltReceiver(BaseReceiver):
@@ -116,7 +116,7 @@ class GBNSender(BaseSender):
       seg = Segment(msg, 'receiver', self.nextseqnum)
       self.send_to_network(seg)
       if(self.base==self.nextseqnum):
-        self.start_timer(3)
+        self.start_timer(self.app_interval)
       self.nextseqnum += 1
 
   def receive_from_network(self, seg):
@@ -127,10 +127,10 @@ class GBNSender(BaseSender):
       if(self.base==self.nextseqnum):
         self.end_timer()
       else:
-        self.start_timer(3)
+        self.start_timer(self.app_interval)
 
   def on_interrupt(self):
-    self.start_timer(3)
+    self.start_timer(self.app_interval)
     self.nextseqnum = self.base
 
 class GBNReceiver(BaseReceiver):
