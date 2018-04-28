@@ -34,10 +34,11 @@ from sendrecvbase import BaseSender, BaseReceiver
 import Queue
 
 class Segment:
-    def __init__(self, msg, dst, bit=None):
+    def __init__(self, msg, dst, bit=None, acknum=None):
         self.msg = msg
         self.dst = dst
         self.bit = bit
+        self.acknum = acknum
 
 class NaiveSender(BaseSender):
     def __init__(self, app_interval):
@@ -86,11 +87,34 @@ class AltSender(BaseSender):
     self.start_timer(self.app_interval)
     pass
 
+  def s_handshake(self, seg=None):
+    flag = False
+    if seg == None:
+      SYN = Segment("SYN", 'receiver', bit=0, acknum=0)
+      self.send_to_network(SYN)
+      flag = True
+    elif seg.msg == 'SYN-ACK':
+      ACK = Segment("ACK", 'receiver', bit=0, acknum=1)
+      self.send_to_network(ACK)
+      flag = True
+    return flag
+
 class AltReceiver(BaseReceiver):
   def __init__(self):
         super(AltReceiver, self).__init__()
         self.bit = True
-  
+        self.connected = False
+
+  def r_handshake(self, seg):
+    flag = False
+    if seg.msg == 'SYN':
+      SYNACK = Segment('SYN-ACK', 'sender', bit=0, acknum=1)
+      self.send_to_network(SYNACK)
+    elif seg.msg == 'ACK':
+       self.connected = True
+       flag = True
+    return flag
+
   def receive_from_client(self, seg):
     if(seg.msg == '<CORRUPTED>'):
       NAK = Segment("ACK", 'sender', not self.bit)

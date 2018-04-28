@@ -61,6 +61,9 @@ class BaseSender(object):
     def on_interrupt(self):
         pass
 
+    def s_handshake(self, seg=None):
+        pass
+         
 class BaseReceiver(object):
     def __init__(self):
         self.input_queue    = Queue.Queue()
@@ -80,4 +83,7 @@ class BaseReceiver(object):
         print('Message received ({}): {}'.format(self.received_count, msg))
 
     def receive_from_client(self, seg):
+        pass
+
+    def r_handshake(self, seg):
         pass

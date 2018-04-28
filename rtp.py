@@ -62,6 +62,36 @@ class Simulation:
     def run(self, n):
         for step in range(1, n+1):
             self.print_debug('Step {}:'.format(step))
+            if step == 1:
+              connected = False
+              while(not connected):
+                print("[*] Peforming TLS handshake...")
+
+                self.sender.s_handshake()
+                self.push_to_network(step, self.sender.output_queue.get())
+                (_, shake) = self.network_queue.get()
+                if random.random() < self.corr_prob:
+                  print("[-] Failed TLS handshake: CORRUPTED SYN")
+                  continue
+                self.receiver.input_queue.put(shake)
+                self.receiver.r_handshake(self.receiver.input_queue.get())
+                self.push_to_network(step, self.receiver.output_queue.get())
+                (_, shake) = self.network_queue.get()
+                if random.random() < self.corr_prob:
+                  print("[-] Failed TLS handshake: CORRUPTED SYNACK")
+                  continue
+                self.sender.input_queue.put(shake)
+                self.sender.s_handshake(seg=self.sender.input_queue.get())
+                self.push_to_network(step, self.sender.output_queue.get())
+                (_, shake) = self.network_queue.get()
+                if random.random() < self.corr_prob:
+                  print("[-] Failed TLS handshake: CORRUPTED ACK")
+                  continue
+                self.receiver.input_queue.put(shake)
+                connected = self.receiver.r_handshake(self.receiver.input_queue.get())
+                if connected == True:
+                  print("[+] Connected to client.")
+              
             # 1. Step the sender and receiver
             self.sender.step()
             self.receiver.step()
