@@ -107,11 +107,9 @@ class Simulation:
         (_, shake) = self.network_queue.get()
         self.receiver.input_queue.put(shake)
         
-        print('a')
         #sending ACK
-        self.receiver.r_close(self.receiver.input_queue.get())
+        #self.receiver.r_close(self.receiver.input_queue.get())
         
-        print('b')
         #sending FIN
         self.receiver.r_close()
         self.push_to_network(step, self.receiver.output_queue.get())
@@ -123,11 +121,11 @@ class Simulation:
         self.push_to_network(step, self.sender.output_queue.get())
         (_, shake) = self.network_queue.get()
         self.receiver.input_queue.put(shake)
-        
+        print(shake.msg)        
         #receiveing ACK
-        completed = self.receiver.r_close(self.receiver.input_queue.get())
-        if random.random() < self.corr_prob:
-          completed = False
+        frick = self.receiver.input_queue.get()
+        print(frick.msg)
+        completed = self.receiver.r_close(frick)
         if completed:
           print("[+] Connection terminated.")
         else:

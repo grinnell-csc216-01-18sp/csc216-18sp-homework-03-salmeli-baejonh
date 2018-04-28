@@ -130,7 +130,7 @@ class AltReceiver(BaseReceiver):
       self.send_to_network(FIN)
     elif seg.msg == 'FIN':
       ACK = Segment("ACK", 'sender')
-      self.send_to_network(ACK)
+      # self.send_to_network(ACK)
     elif seg.msg == 'ACK':
       flag = True
     return flag
