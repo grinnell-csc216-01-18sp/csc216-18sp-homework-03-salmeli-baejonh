@@ -88,14 +88,22 @@ class AltSender(BaseSender):
     pass
 
   def s_handshake(self, seg=None):
+    if seg == None:
+      SYN = Segment("SYN", 'receiver')
+      self.send_to_network(SYN)
+    elif seg.msg == 'SYN-ACK':
+      ACK = Segment("ACK", 'receiver')
+      self.send_to_network(ACK)
+
+  def s_close(self, seg=None):
     flag = False
     if seg == None:
-      SYN = Segment("SYN", 'receiver', bit=0, acknum=0)
-      self.send_to_network(SYN)
-      flag = True
-    elif seg.msg == 'SYN-ACK':
-      ACK = Segment("ACK", 'receiver', bit=0, acknum=1)
+      FIN = Segment("FIN", 'receiver')
+      self.send_to_network(FIN)
+    elif seg.msg == 'FIN':
+      ACK = Segment("ACK", 'receiver')
       self.send_to_network(ACK)
+    elif seg.msg == 'ACK':
       flag = True
     return flag
 
@@ -108,11 +116,23 @@ class AltReceiver(BaseReceiver):
   def r_handshake(self, seg):
     flag = False
     if seg.msg == 'SYN':
-      SYNACK = Segment('SYN-ACK', 'sender', bit=0, acknum=1)
+      SYNACK = Segment('SYN-ACK', 'sender')
       self.send_to_network(SYNACK)
     elif seg.msg == 'ACK':
        self.connected = True
        flag = True
+    return flag
+
+  def r_close(self, seg=None):
+    flag = False
+    if seg == None:
+      FIN = Segment("FIN", 'sender')
+      self.send_to_network(FIN)
+    elif seg.msg == 'FIN':
+      ACK = Segment("ACK", 'sender')
+      self.send_to_network(ACK)
+    elif seg.msg == 'ACK':
+      flag = True
     return flag
 
   def receive_from_client(self, seg):
@@ -157,6 +177,30 @@ class GBNSender(BaseSender):
     self.start_timer(self.app_interval)
     self.nextseqnum = self.base
 
+  def s_handshake(self, seg=None):
+    flag = False
+    if seg == None:
+      SYN = Segment("SYN", 'receiver', bit=0, acknum=0)
+      self.send_to_network(SYN)
+      flag = True
+    elif seg.msg == 'SYN-ACK':
+      ACK = Segment("ACK", 'receiver', bit=0, acknum=1)
+      self.send_to_network(ACK)
+      flag = True
+    return flag
+
+  def s_close(self, seg=None):
+    flag = False
+    if seg == None:
+      FIN = Segment("FIN", 'receiver')
+      self.send_to_network(FIN)
+    elif seg.msg == 'FIN':
+      ACK = Segment("ACK", 'receiver')
+      self.send_to_network(ACK)
+    elif seg.msg == 'ACK':
+      flag = True
+    return flag
+
 class GBNReceiver(BaseReceiver):
   def __init__(self):
         super(GBNReceiver, self).__init__()
@@ -170,3 +214,25 @@ class GBNReceiver(BaseReceiver):
       ACK = Segment('ACK', 'sender', self.expectedseqnum)
       self.send_to_network(ACK)
       self.expectedseqnum += 1
+
+  def r_handshake(self, seg):
+    flag = False
+    if seg.msg == 'SYN':
+      SYNACK = Segment('SYN-ACK', 'sender', bit=0, acknum=1)
+      self.send_to_network(SYNACK)
+    elif seg.msg == 'ACK':
+       self.connected = True
+       flag = True
+    return flag
+
+  def r_close(self, seg=None):
+    flag = False
+    if seg == None:
+      FIN = Segment("FIN", 'sender')
+      self.send_to_network(FIN)
+    elif seg.msg == 'FIN':
+      ACK = Segment("ACK", 'sender')
+      self.send_to_network(ACK)
+    elif seg.msg == 'ACK':
+      flag = True
+    return flag

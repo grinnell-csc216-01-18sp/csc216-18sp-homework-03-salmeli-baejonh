@@ -64,6 +64,9 @@ class BaseSender(object):
     def s_handshake(self, seg=None):
         pass
          
+    def s_close(self, seg):
+        pass
+
 class BaseReceiver(object):
     def __init__(self):
         self.input_queue    = Queue.Queue()
@@ -86,4 +89,7 @@ class BaseReceiver(object):
         pass
 
     def r_handshake(self, seg):
+        pass
+
+    def r_close(self, seg):
         pass

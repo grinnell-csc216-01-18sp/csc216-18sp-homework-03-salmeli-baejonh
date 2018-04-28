@@ -41,6 +41,9 @@ DROP_PROB = 0.0
 def peek(q):
     return q.queue[0]
 
+def clear(q):
+  q[:] = []
+
 class Simulation:
     def __init__(self, sender, receiver, net_delay, corr_prob, drop_prob, debug):
         self.sender = sender
@@ -59,14 +62,13 @@ class Simulation:
         if random.random() >= self.drop_prob:
             self.network_queue.put( (step + self.net_delay, seg) )
 
-    def run(self, n):
-        for step in range(1, n+1):
-            self.print_debug('Step {}:'.format(step))
-            if step == 1:
+    def handshake(self):
               connected = False
+              step = 1
               while(not connected):
+                clear(self.network_queue.queue)
                 print("[*] Peforming TLS handshake...")
-
+                
                 self.sender.s_handshake()
                 self.push_to_network(step, self.sender.output_queue.get())
                 (_, shake) = self.network_queue.get()
@@ -91,7 +93,51 @@ class Simulation:
                 connected = self.receiver.r_handshake(self.receiver.input_queue.get())
                 if connected == True:
                   print("[+] Connected to client.")
-              
+
+    def close(self):
+      completed = False
+      step = 1
+      while(not completed):
+        clear(self.network_queue.queue)
+        print("[*] Terminating connection...")
+        
+        #sending FIN
+        self.sender.s_close()
+        self.push_to_network(step, self.sender.output_queue.get())
+        (_, shake) = self.network_queue.get()
+        self.receiver.input_queue.put(shake)
+        
+        print('a')
+        #sending ACK
+        self.receiver.r_close(self.receiver.input_queue.get())
+        
+        print('b')
+        #sending FIN
+        self.receiver.r_close()
+        self.push_to_network(step, self.receiver.output_queue.get())
+        (_, shake) = self.network_queue.get()
+        self.sender.input_queue.put(shake)
+        
+        #sending ACK
+        self.sender.s_close(self.sender.input_queue.get())
+        self.push_to_network(step, self.sender.output_queue.get())
+        (_, shake) = self.network_queue.get()
+        self.receiver.input_queue.put(shake)
+        
+        #receiveing ACK
+        completed = self.receiver.r_close(self.receiver.input_queue.get())
+        if random.random() < self.corr_prob:
+          completed = False
+        if completed:
+          print("[+] Connection terminated.")
+        else:
+          print("[-] Failed to terminate connection. Trying again...")
+
+    def run(self, n):
+        for step in range(1, n+1):
+            self.print_debug('Step {}:'.format(step))
+            if step == 1:
+              self.handshake()
             # 1. Step the sender and receiver
             self.sender.step()
             self.receiver.step()
@@ -113,6 +159,8 @@ class Simulation:
                 self.push_to_network(step, self.sender.output_queue.get())
             if not self.receiver.output_queue.empty():
                 self.push_to_network(step, self.receiver.output_queue.get())
+            if step == n:
+              self.close()
 
 def main():
     parser = argparse.ArgumentParser(
